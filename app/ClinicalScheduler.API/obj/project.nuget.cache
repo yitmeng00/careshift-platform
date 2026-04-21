@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "xnFs/zcAb/E=",
+  "success": true,
+  "projectFilePath": "/Users/ivanwong/Projects/clinical-scheduler-platform/app/ClinicalScheduler.API/ClinicalScheduler.API.csproj",
+  "expectedPackageFiles": [
+    "/Users/ivanwong/.nuget/packages/microsoft.aspnetcore.openapi/10.0.6/microsoft.aspnetcore.openapi.10.0.6.nupkg.sha512",
+    "/Users/ivanwong/.nuget/packages/microsoft.openapi/2.0.0/microsoft.openapi.2.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
