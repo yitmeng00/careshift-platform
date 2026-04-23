@@ -11,7 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── Services ──────────────────────────────────────────────────────────────
+// Services
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -67,7 +67,7 @@ builder.Services.AddCors(options =>
             .AllowCredentials());
 });
 
-// ── Build ─────────────────────────────────────────────────────────────────
+// Build
 var app = builder.Build();
 
 // Migrate and seed on startup
@@ -80,7 +80,7 @@ using (var scope = app.Services.CreateScope())
     await seeder.SeedAsync();
 }
 
-// ── Pipeline ──────────────────────────────────────────────────────────────
+// Pipeline
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
