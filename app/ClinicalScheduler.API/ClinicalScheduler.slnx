@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ClinicalScheduler.API/ClinicalScheduler.API.csproj" />
+  <Project Path="ClinicalScheduler.Application/ClinicalScheduler.Application.csproj" />
+  <Project Path="ClinicalScheduler.Domain/ClinicalScheduler.Domain.csproj" />
+  <Project Path="ClinicalScheduler.Infrastructure/ClinicalScheduler.Infrastructure.csproj" />
+</Solution>

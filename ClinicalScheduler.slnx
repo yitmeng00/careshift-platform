@@ -1,5 +1,8 @@
 <Solution>
-  <Folder Name="/app/">
-    <Project Path="app/ClinicalScheduler.API/ClinicalScheduler.API.csproj" />
+  <Folder Name="/src/">
+    <Project Path="app/ClinicalScheduler.API/ClinicalScheduler.API/ClinicalScheduler.API.csproj" />
+    <Project Path="app/ClinicalScheduler.API/ClinicalScheduler.Application/ClinicalScheduler.Application.csproj" />
+    <Project Path="app/ClinicalScheduler.API/ClinicalScheduler.Domain/ClinicalScheduler.Domain.csproj" />
+    <Project Path="app/ClinicalScheduler.API/ClinicalScheduler.Infrastructure/ClinicalScheduler.Infrastructure.csproj" />
   </Folder>
 </Solution>
