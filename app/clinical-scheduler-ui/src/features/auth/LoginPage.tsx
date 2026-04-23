@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useLoginMutation } from "./authApi";
 import { setCredentials } from "./authSlice";
 import { useAppDispatch } from "../../app/hooks";
+import FormField from "../../components/ui/FormField";
 import { loginSchema } from "../../schemas/auth";
 import type { LoginFormValues } from "../../types/auth";
 
@@ -18,22 +19,6 @@ const FEATURES: string[] = [
   "Real-time conflict detection",
   "Overtime tracking & alerts",
 ];
-
-interface FieldProps {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}
-
-function Field({ label, error, children }: FieldProps) {
-  return (
-    <div>
-      <label className="block text-sm font-medium mb-1.5">{label}</label>
-      {children}
-      {error && <p className="mt-1.5 text-xs text-error">{error}</p>}
-    </div>
-  );
-}
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
@@ -155,7 +140,7 @@ export default function LoginPage() {
                   {serverError}
                 </div>
               )}
-              <Field label="Email address" error={errors.email?.message}>
+              <FormField label="Email address" error={errors.email?.message}>
                 <input
                   type="email"
                   autoComplete="email"
@@ -163,8 +148,8 @@ export default function LoginPage() {
                   {...register("email")}
                   className={inputClass(!!errors.email)}
                 />
-              </Field>
-              <Field label="Password" error={errors.password?.message}>
+              </FormField>
+              <FormField label="Password" error={errors.password?.message}>
                 <input
                   type="password"
                   autoComplete="current-password"
@@ -172,7 +157,7 @@ export default function LoginPage() {
                   {...register("password")}
                   className={inputClass(!!errors.password)}
                 />
-              </Field>
+              </FormField>
               <button
                 type="submit"
                 disabled={isLoading}
