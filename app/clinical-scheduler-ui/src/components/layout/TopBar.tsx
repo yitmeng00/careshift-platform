@@ -30,7 +30,7 @@ export default function TopBar() {
   const user = useAppSelector((s) => s.auth.user);
 
   return (
-    <div className="sticky top-0 flex items-center justify-between no-print bg-white z-90 border-b border-b-slate-200 h-13 px-9">
+    <div className="sticky top-0 flex flex-col lg:flex-row items-end lg:items-center justify-center lg:justify-between no-print bg-white z-90 border-b border-b-slate-200 h-13 px-9">
       <div className="text-sm text-slate-500 flex gap-4">
         <span className="text-slate-400">{getWeekRange().split(" · ")[0]}</span>
         <span>{getWeekRange().split(" · ")[1]}</span>
