@@ -1,3 +1,5 @@
+import { useAppSelector } from "../../app/hooks";
+
 function getWeekRange(): string {
   const today = new Date();
   const day = today.getDay();
@@ -25,6 +27,8 @@ function getWeekNumber(date: Date): number {
 }
 
 export default function TopBar() {
+  const user = useAppSelector((s) => s.auth.user);
+
   return (
     <div className="sticky top-0 flex items-center justify-between no-print bg-white z-90 border-b border-b-slate-200 h-13 px-9">
       <div className="text-sm text-slate-500 flex gap-4">
@@ -32,6 +36,14 @@ export default function TopBar() {
         <span>{getWeekRange().split(" · ")[1]}</span>
       </div>
       <div className="flex items-center gap-3 text-sm text-slate-500">
+        {user && (
+          <>
+            <span className="text-slate-400 hidden sm:inline">
+              {user.department}
+            </span>
+            <span className="text-slate-300 hidden sm:inline">·</span>
+          </>
+        )}
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-emerald-500" />
           <span>System online</span>

@@ -1,10 +1,26 @@
 import clsx from "clsx";
 import { LogOut } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
-import { NAV_ITEMS } from "../../constants/navbar";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { NAV_ITEMS, ROLE_LABELS } from "../../constants/navbar";
+import { logout } from "../../features/auth/authSlice";
+import type { StaffRole } from "../../types/auth";
 
 export default function Sidebar() {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const user = useAppSelector((s) => s.auth.user);
+
+  if (!user) return null;
+
+  const visibleNav = NAV_ITEMS.filter((n) => n.roles.includes(user.role));
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login", { replace: true });
+  };
+
   return (
     <aside className="w-56 shrink-0 flex flex-col no-print border-r border-r-slate-200 bg-white z-100">
       {/* Logo */}
@@ -21,7 +37,7 @@ export default function Sidebar() {
       </div>
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
-        {NAV_ITEMS.map((item) => {
+        {visibleNav.map((item) => {
           const Icon = item.icon;
           return (
             <NavLink
@@ -48,15 +64,18 @@ export default function Sidebar() {
       <div className="p-4 border-t border-t-slate-200">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 bg-accent/10 text-accent">
-            Initials
+            {user.initials}
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-xs font-semibold text-slate-900 truncate">
-              Full Name
+              {user.fullName}
             </div>
-            <div className="text-xs text-slate-400 capitalize">Role</div>
+            <div className="text-xs text-slate-400 capitalize">
+              {ROLE_LABELS[user.role as StaffRole]}
+            </div>
           </div>
           <button
+            onClick={handleLogout}
             title="Sign out"
             className="text-slate-400 hover:text-slate-600 transition-colors text-sm cursor-pointer p-1"
           >

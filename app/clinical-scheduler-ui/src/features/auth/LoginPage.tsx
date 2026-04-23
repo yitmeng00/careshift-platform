@@ -1,8 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import clsx from "clsx";
 import { CircleCheckBig } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
+import { useLoginMutation } from "./authApi";
+import { setCredentials } from "./authSlice";
+import { useAppDispatch } from "../../app/hooks";
 import { loginSchema } from "../../schemas/auth";
 import type { LoginFormValues } from "../../types/auth";
 
@@ -31,6 +36,11 @@ function Field({ label, error, children }: FieldProps) {
 }
 
 export default function LoginPage() {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const [login, { isLoading }] = useLoginMutation();
+  const [serverError, setServerError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -38,7 +48,20 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) });
 
   const onSubmit = async (values: LoginFormValues) => {
-    console.log("Submit Form", values);
+    setServerError(null);
+    try {
+      const result = await login(values).unwrap();
+      dispatch(
+        setCredentials({
+          token: result.accessToken,
+          user: result.staff,
+        }),
+      );
+      navigate("/dashboard", { replace: true });
+    } catch (err: unknown) {
+      const error = err as { data?: { title?: string }; status?: number };
+      setServerError(error?.data?.title ?? "Login failed. Please try again.");
+    }
   };
 
   const currentYear = new Date().getFullYear();
@@ -126,6 +149,12 @@ export default function LoginPage() {
               noValidate
               className="space-y-5"
             >
+              {/* Server error */}
+              {serverError && (
+                <div className="rounded-lg px-4 py-3 text-sm text-error border border-error-border bg-error-bg">
+                  {serverError}
+                </div>
+              )}
               <Field label="Email address" error={errors.email?.message}>
                 <input
                   type="email"
@@ -146,11 +175,16 @@ export default function LoginPage() {
               </Field>
               <button
                 type="submit"
+                disabled={isLoading}
                 className={clsx(
                   "w-full py-2.5 rounded-lg text-sm text-white font-semibold bg-accent transition-opacity",
+                  {
+                    "opacity-65 cursor-not-allowed": isLoading,
+                    "opacity-100 cursor-pointer": !isLoading,
+                  },
                 )}
               >
-                Sign in
+                {isLoading ? "Signing in…" : "Sign in"}
               </button>
             </form>
           </div>
