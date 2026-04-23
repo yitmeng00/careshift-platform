@@ -1,9 +1,10 @@
+using ClinicalScheduler.Application.Common.Interfaces;
 using ClinicalScheduler.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClinicalScheduler.Infrastructure.Persistence;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IApplicationDbContext
 {
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Staff> Staff => Set<Staff>();
