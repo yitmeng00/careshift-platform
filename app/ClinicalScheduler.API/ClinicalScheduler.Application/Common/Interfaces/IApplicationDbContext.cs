@@ -10,4 +10,6 @@ public interface IApplicationDbContext
     DbSet<LeaveRequest> LeaveRequests { get; }
     DbSet<AuditLog> AuditLogs { get; }
     DbSet<Department> Departments { get; }
+
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

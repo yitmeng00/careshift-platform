@@ -10,23 +10,27 @@ public class DbSeeder(AppDbContext context, ILogger<DbSeeder> logger, IPasswordH
 {
     public async Task SeedAsync()
     {
-        if (await context.Departments.AnyAsync())
+        if (!await context.Departments.AnyAsync())
         {
-            logger.LogInformation("Database already seeded — skipping.");
-            return;
+            logger.LogInformation("Seeding database...");
+            await SeedCoreDataAsync();
         }
 
-        logger.LogInformation("Seeding database...");
+        // Always ensure the current ISO week has shifts so the schedule is never empty.
+        await EnsureCurrentWeekShiftsAsync();
+    }
 
+    private async Task SeedCoreDataAsync()
+    {
         var departments = new List<Department>
         {
-            new() { Name = "Emergency",   Description = "Emergency department" },
-            new() { Name = "Cardiology",  Description = "Cardiology department" },
-            new() { Name = "Pediatrics",  Description = "Pediatrics department" },
-            new() { Name = "ICU",         Description = "Intensive Care Unit" },
-            new() { Name = "Front Desk",  Description = "Front desk and reception" },
-            new() { Name = "Radiology",   Description = "Radiology department" },
-            new() { Name = "Oncology",    Description = "Oncology department" },
+            new() { Name = "Emergency",  Description = "Emergency department" },
+            new() { Name = "Cardiology", Description = "Cardiology department" },
+            new() { Name = "Pediatrics", Description = "Pediatrics department" },
+            new() { Name = "ICU",        Description = "Intensive Care Unit" },
+            new() { Name = "Front Desk", Description = "Front desk and reception" },
+            new() { Name = "Radiology",  Description = "Radiology department" },
+            new() { Name = "Oncology",   Description = "Oncology department" },
         };
 
         context.Departments.AddRange(departments);
@@ -70,30 +74,9 @@ public class DbSeeder(AppDbContext context, ILogger<DbSeeder> logger, IPasswordH
         context.Staff.AddRange(staffEntities);
         await context.SaveChangesAsync();
 
-        var today = DateTime.UtcNow.Date;
         var staffMap = staffEntities.ToDictionary(s => s.FullName, s => s);
 
-        var shifts = new List<Shift>
-        {
-            // Dr. Sarah Chen - Emergency
-            new() { StaffId=staffMap["Dr. Sarah Chen"].Id, DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=today.AddDays(0).AddHours(7),  EndTime=today.AddDays(0).AddHours(15) },
-            new() { StaffId=staffMap["Dr. Sarah Chen"].Id, DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=today.AddDays(1).AddHours(7),  EndTime=today.AddDays(1).AddHours(15) },
-            new() { StaffId=staffMap["Dr. Sarah Chen"].Id, DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Afternoon, StartTime=today.AddDays(2).AddHours(15), EndTime=today.AddDays(2).AddHours(23) },
-            new() { StaffId=staffMap["Dr. Sarah Chen"].Id, DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=today.AddDays(4).AddHours(7),  EndTime=today.AddDays(4).AddHours(15) },
-            new() { StaffId=staffMap["Dr. Sarah Chen"].Id, DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=today.AddDays(5).AddHours(7),  EndTime=today.AddDays(5).AddHours(15) },
-            // Emma White - Emergency nurse
-            new() { StaffId=staffMap["Emma White"].Id,     DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=today.AddDays(0).AddHours(7),  EndTime=today.AddDays(0).AddHours(15) },
-            new() { StaffId=staffMap["Emma White"].Id,     DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=today.AddDays(1).AddHours(7),  EndTime=today.AddDays(1).AddHours(15) },
-            new() { StaffId=staffMap["Emma White"].Id,     DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=today.AddDays(2).AddHours(7),  EndTime=today.AddDays(2).AddHours(15) },
-            new() { StaffId=staffMap["Emma White"].Id,     DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=today.AddDays(3).AddHours(7),  EndTime=today.AddDays(3).AddHours(15) },
-            new() { StaffId=staffMap["Emma White"].Id,     DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=today.AddDays(4).AddHours(7),  EndTime=today.AddDays(4).AddHours(15) },
-            // Luis Torres - ICU night shifts
-            new() { StaffId=staffMap["Luis Torres"].Id,    DepartmentId=deptMap["ICU"],        ShiftType=ShiftType.Night,    StartTime=today.AddDays(0).AddHours(23), EndTime=today.AddDays(1).AddHours(7) },
-            new() { StaffId=staffMap["Luis Torres"].Id,    DepartmentId=deptMap["ICU"],        ShiftType=ShiftType.Night,    StartTime=today.AddDays(1).AddHours(23), EndTime=today.AddDays(2).AddHours(7) },
-            new() { StaffId=staffMap["Luis Torres"].Id,    DepartmentId=deptMap["ICU"],        ShiftType=ShiftType.Night,    StartTime=today.AddDays(2).AddHours(23), EndTime=today.AddDays(3).AddHours(7) },
-        };
-
-        context.Shifts.AddRange(shifts);
+        var today = DateTime.UtcNow.Date;
 
         var leaveRequests = new List<LeaveRequest>
         {
@@ -106,7 +89,7 @@ public class DbSeeder(AppDbContext context, ILogger<DbSeeder> logger, IPasswordH
                 Reason = "Family event",
                 Status = LeaveStatus.Pending,
                 SubmittedAt = DateTime.UtcNow.AddDays(-2),
-                AuditEntries = [ new LeaveAuditEntry { At=DateTime.UtcNow.AddDays(-2), By="Dr. James Park", Action="submitted" } ],
+                AuditEntries = [new LeaveAuditEntry { At = DateTime.UtcNow.AddDays(-2), By = "Dr. James Park", Action = "submitted" }],
             },
             new()
             {
@@ -117,7 +100,7 @@ public class DbSeeder(AppDbContext context, ILogger<DbSeeder> logger, IPasswordH
                 Reason = "Vacation",
                 Status = LeaveStatus.Pending,
                 SubmittedAt = DateTime.UtcNow.AddDays(-3),
-                AuditEntries = [ new LeaveAuditEntry { At=DateTime.UtcNow.AddDays(-3), By="Emma White", Action="submitted" } ],
+                AuditEntries = [new LeaveAuditEntry { At = DateTime.UtcNow.AddDays(-3), By = "Emma White", Action = "submitted" }],
             },
             new()
             {
@@ -133,8 +116,8 @@ public class DbSeeder(AppDbContext context, ILogger<DbSeeder> logger, IPasswordH
                 ReviewNote = "Cover arranged with Kira",
                 AuditEntries =
                 [
-                    new LeaveAuditEntry { At=DateTime.UtcNow.AddDays(-1), By="Aisha Johnson", Action="submitted" },
-                    new LeaveAuditEntry { At=DateTime.UtcNow.AddHours(-1), By="Admin User", Action="approved", Note="Cover arranged with Kira" },
+                    new LeaveAuditEntry { At = DateTime.UtcNow.AddDays(-1), By = "Aisha Johnson", Action = "submitted" },
+                    new LeaveAuditEntry { At = DateTime.UtcNow.AddHours(-1), By = "Admin User", Action = "approved", Note = "Cover arranged with Kira" },
                 ],
             },
         };
@@ -142,12 +125,108 @@ public class DbSeeder(AppDbContext context, ILogger<DbSeeder> logger, IPasswordH
         context.LeaveRequests.AddRange(leaveRequests);
 
         context.AuditLogs.AddRange([
-            new AuditLog { StaffId=staffMap["Admin User"].Id, Action="Approved leave", EntityType="LeaveRequest", PerformedBy="Admin User", Detail="Aisha Johnson · Sick Leave", Icon="✓", Timestamp=DateTime.UtcNow.AddHours(-1) },
-            new AuditLog { StaffId=staffMap["Admin User"].Id, Action="Database seeded", EntityType="System", PerformedBy="System", Detail="Initial seed completed", Icon="+", Timestamp=DateTime.UtcNow },
+            new AuditLog { StaffId = staffMap["Admin User"].Id, Action = "Approved leave", EntityType = "LeaveRequest", PerformedBy = "Admin User", Detail = "Aisha Johnson · Sick Leave", Icon = "✓", Timestamp = DateTime.UtcNow.AddHours(-1) },
+            new AuditLog { StaffId = staffMap["Admin User"].Id, Action = "Database seeded", EntityType = "System", PerformedBy = "System", Detail = "Initial seed completed", Icon = "+", Timestamp = DateTime.UtcNow },
         ]);
 
         await context.SaveChangesAsync();
+        logger.LogInformation("Core data seeding completed.");
+    }
 
-        logger.LogInformation("Database seeding completed.");
+    private async Task EnsureCurrentWeekShiftsAsync()
+    {
+        var today = DateTime.UtcNow.Date;
+        var daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
+        var monday = today.AddDays(-daysFromMonday);
+        var sunday = monday.AddDays(7);
+
+        if (await context.Shifts.AnyAsync(s => s.StartTime >= monday && s.StartTime < sunday))
+        {
+            logger.LogInformation("Shifts already exist for the current week — skipping shift seed.");
+            return;
+        }
+
+        logger.LogInformation("Seeding shifts for week {WeekStart}...", monday.ToString("yyyy-MM-dd"));
+
+        var staffMap = await context.Staff.ToDictionaryAsync(s => s.FullName, s => s.Id);
+        var deptMap = await context.Departments.ToDictionaryAsync(d => d.Name, d => d.Id);
+
+        // Helper: create DateTime in UTC for a given week-offset day and hour
+        DateTime Slot(int dayOffset, int hour) => monday.AddDays(dayOffset).AddHours(hour);
+
+        var shifts = new List<Shift>
+        {
+            // ── Emergency ─────────────────────────────────────────────────────────
+            // Dr. Marcus Kim (DeptLead) – Mon/Tue/Wed Morning, Thu Afternoon
+            new() { StaffId=staffMap["Dr. Marcus Kim"],  DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(0,7),  EndTime=Slot(0,15) },
+            new() { StaffId=staffMap["Dr. Marcus Kim"],  DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(1,7),  EndTime=Slot(1,15) },
+            new() { StaffId=staffMap["Dr. Marcus Kim"],  DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(2,7),  EndTime=Slot(2,15) },
+            new() { StaffId=staffMap["Dr. Marcus Kim"],  DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Afternoon, StartTime=Slot(3,15), EndTime=Slot(3,23) },
+            // Dr. Sarah Chen – Mon-Fri Morning, Sat Afternoon
+            new() { StaffId=staffMap["Dr. Sarah Chen"],  DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(0,7),  EndTime=Slot(0,15) },
+            new() { StaffId=staffMap["Dr. Sarah Chen"],  DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(1,7),  EndTime=Slot(1,15) },
+            new() { StaffId=staffMap["Dr. Sarah Chen"],  DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Afternoon, StartTime=Slot(2,15), EndTime=Slot(2,23) },
+            new() { StaffId=staffMap["Dr. Sarah Chen"],  DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(3,7),  EndTime=Slot(3,15) },
+            new() { StaffId=staffMap["Dr. Sarah Chen"],  DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(4,7),  EndTime=Slot(4,15) },
+            new() { StaffId=staffMap["Dr. Sarah Chen"],  DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Afternoon, StartTime=Slot(5,15), EndTime=Slot(5,23) },
+            // Emma White – Mon/Tue/Wed/Thu/Fri Morning
+            new() { StaffId=staffMap["Emma White"],      DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(0,7),  EndTime=Slot(0,15) },
+            new() { StaffId=staffMap["Emma White"],      DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(1,7),  EndTime=Slot(1,15) },
+            new() { StaffId=staffMap["Emma White"],      DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(2,7),  EndTime=Slot(2,15) },
+            new() { StaffId=staffMap["Emma White"],      DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(3,7),  EndTime=Slot(3,15) },
+            new() { StaffId=staffMap["Emma White"],      DepartmentId=deptMap["Emergency"], ShiftType=ShiftType.Morning,   StartTime=Slot(4,7),  EndTime=Slot(4,15) },
+
+            // ── Cardiology ────────────────────────────────────────────────────────
+            // Dr. James Park – Tue/Wed/Thu Morning, Fri Afternoon
+            new() { StaffId=staffMap["Dr. James Park"],  DepartmentId=deptMap["Cardiology"], ShiftType=ShiftType.Morning,   StartTime=Slot(1,7),  EndTime=Slot(1,15) },
+            new() { StaffId=staffMap["Dr. James Park"],  DepartmentId=deptMap["Cardiology"], ShiftType=ShiftType.Morning,   StartTime=Slot(2,7),  EndTime=Slot(2,15) },
+            new() { StaffId=staffMap["Dr. James Park"],  DepartmentId=deptMap["Cardiology"], ShiftType=ShiftType.Morning,   StartTime=Slot(3,7),  EndTime=Slot(3,15) },
+            new() { StaffId=staffMap["Dr. James Park"],  DepartmentId=deptMap["Cardiology"], ShiftType=ShiftType.Afternoon, StartTime=Slot(4,15), EndTime=Slot(4,23) },
+            // Kira Patel – Mon/Wed/Fri Afternoon
+            new() { StaffId=staffMap["Kira Patel"],      DepartmentId=deptMap["Cardiology"], ShiftType=ShiftType.Afternoon, StartTime=Slot(0,15), EndTime=Slot(0,23) },
+            new() { StaffId=staffMap["Kira Patel"],      DepartmentId=deptMap["Cardiology"], ShiftType=ShiftType.Afternoon, StartTime=Slot(2,15), EndTime=Slot(2,23) },
+            new() { StaffId=staffMap["Kira Patel"],      DepartmentId=deptMap["Cardiology"], ShiftType=ShiftType.Afternoon, StartTime=Slot(4,15), EndTime=Slot(4,23) },
+
+            // ── ICU ───────────────────────────────────────────────────────────────
+            // Luis Torres – Night shifts Mon–Fri
+            new() { StaffId=staffMap["Luis Torres"],     DepartmentId=deptMap["ICU"], ShiftType=ShiftType.Night, StartTime=Slot(0,23), EndTime=Slot(1,7) },
+            new() { StaffId=staffMap["Luis Torres"],     DepartmentId=deptMap["ICU"], ShiftType=ShiftType.Night, StartTime=Slot(1,23), EndTime=Slot(2,7) },
+            new() { StaffId=staffMap["Luis Torres"],     DepartmentId=deptMap["ICU"], ShiftType=ShiftType.Night, StartTime=Slot(2,23), EndTime=Slot(3,7) },
+            new() { StaffId=staffMap["Luis Torres"],     DepartmentId=deptMap["ICU"], ShiftType=ShiftType.Night, StartTime=Slot(3,23), EndTime=Slot(4,7) },
+            new() { StaffId=staffMap["Luis Torres"],     DepartmentId=deptMap["ICU"], ShiftType=ShiftType.Night, StartTime=Slot(4,23), EndTime=Slot(5,7) },
+            // Diane Foster – Mon/Tue/Wed/Thu Morning
+            new() { StaffId=staffMap["Diane Foster"],    DepartmentId=deptMap["ICU"], ShiftType=ShiftType.Morning, StartTime=Slot(0,7), EndTime=Slot(0,15) },
+            new() { StaffId=staffMap["Diane Foster"],    DepartmentId=deptMap["ICU"], ShiftType=ShiftType.Morning, StartTime=Slot(1,7), EndTime=Slot(1,15) },
+            new() { StaffId=staffMap["Diane Foster"],    DepartmentId=deptMap["ICU"], ShiftType=ShiftType.Morning, StartTime=Slot(2,7), EndTime=Slot(2,15) },
+            new() { StaffId=staffMap["Diane Foster"],    DepartmentId=deptMap["ICU"], ShiftType=ShiftType.Morning, StartTime=Slot(3,7), EndTime=Slot(3,15) },
+
+            // ── Pediatrics ────────────────────────────────────────────────────────
+            // Dr. Priya Nair – Mon/Tue/Thu Morning (part-time)
+            new() { StaffId=staffMap["Dr. Priya Nair"],  DepartmentId=deptMap["Pediatrics"], ShiftType=ShiftType.Morning, StartTime=Slot(0,7), EndTime=Slot(0,15) },
+            new() { StaffId=staffMap["Dr. Priya Nair"],  DepartmentId=deptMap["Pediatrics"], ShiftType=ShiftType.Morning, StartTime=Slot(1,7), EndTime=Slot(1,15) },
+            new() { StaffId=staffMap["Dr. Priya Nair"],  DepartmentId=deptMap["Pediatrics"], ShiftType=ShiftType.Morning, StartTime=Slot(3,7), EndTime=Slot(3,15) },
+            // Aisha Johnson – Mon/Tue/Wed/Fri Afternoon
+            new() { StaffId=staffMap["Aisha Johnson"],   DepartmentId=deptMap["Pediatrics"], ShiftType=ShiftType.Afternoon, StartTime=Slot(0,15), EndTime=Slot(0,23) },
+            new() { StaffId=staffMap["Aisha Johnson"],   DepartmentId=deptMap["Pediatrics"], ShiftType=ShiftType.Afternoon, StartTime=Slot(1,15), EndTime=Slot(1,23) },
+            new() { StaffId=staffMap["Aisha Johnson"],   DepartmentId=deptMap["Pediatrics"], ShiftType=ShiftType.Afternoon, StartTime=Slot(2,15), EndTime=Slot(2,23) },
+            new() { StaffId=staffMap["Aisha Johnson"],   DepartmentId=deptMap["Pediatrics"], ShiftType=ShiftType.Afternoon, StartTime=Slot(4,15), EndTime=Slot(4,23) },
+
+            // ── Front Desk ────────────────────────────────────────────────────────
+            // Mark Stevens – Mon–Fri Morning
+            new() { StaffId=staffMap["Mark Stevens"],    DepartmentId=deptMap["Front Desk"], ShiftType=ShiftType.Morning, StartTime=Slot(0,7), EndTime=Slot(0,15) },
+            new() { StaffId=staffMap["Mark Stevens"],    DepartmentId=deptMap["Front Desk"], ShiftType=ShiftType.Morning, StartTime=Slot(1,7), EndTime=Slot(1,15) },
+            new() { StaffId=staffMap["Mark Stevens"],    DepartmentId=deptMap["Front Desk"], ShiftType=ShiftType.Morning, StartTime=Slot(2,7), EndTime=Slot(2,15) },
+            new() { StaffId=staffMap["Mark Stevens"],    DepartmentId=deptMap["Front Desk"], ShiftType=ShiftType.Morning, StartTime=Slot(3,7), EndTime=Slot(3,15) },
+            new() { StaffId=staffMap["Mark Stevens"],    DepartmentId=deptMap["Front Desk"], ShiftType=ShiftType.Morning, StartTime=Slot(4,7), EndTime=Slot(4,15) },
+            // Lisa Wong – Mon/Wed/Fri Afternoon (part-time)
+            new() { StaffId=staffMap["Lisa Wong"],       DepartmentId=deptMap["Front Desk"], ShiftType=ShiftType.Afternoon, StartTime=Slot(0,15), EndTime=Slot(0,23) },
+            new() { StaffId=staffMap["Lisa Wong"],       DepartmentId=deptMap["Front Desk"], ShiftType=ShiftType.Afternoon, StartTime=Slot(2,15), EndTime=Slot(2,23) },
+            new() { StaffId=staffMap["Lisa Wong"],       DepartmentId=deptMap["Front Desk"], ShiftType=ShiftType.Afternoon, StartTime=Slot(4,15), EndTime=Slot(4,23) },
+        };
+
+        context.Shifts.AddRange(shifts);
+        await context.SaveChangesAsync();
+
+        logger.LogInformation("Seeded {Count} shifts for week starting {WeekStart}.", shifts.Count, monday.ToString("yyyy-MM-dd"));
     }
 }
