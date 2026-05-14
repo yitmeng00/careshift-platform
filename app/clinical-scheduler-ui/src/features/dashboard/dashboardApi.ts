@@ -1,18 +1,28 @@
 import { api } from "../../services/api";
-import type { AuditLogEntry } from "../../types/audit";
-import type { DashboardStats } from "../../types/dashboard";
+import type {
+  DashboardStats,
+  PendingLeave,
+  TodayShift,
+} from "../../types/dashboard";
 
 export const dashboardApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getDashboardStats: builder.query<DashboardStats, void>({
       query: () => "/dashboard/stats",
     }),
-    getRecentActivity: builder.query<AuditLogEntry[], void>({
-      query: () => "/dashboard/activity",
-      providesTags: ["AuditLog"],
+    getTodayShifts: builder.query<TodayShift[], void>({
+      query: () => "/dashboard/today-shifts",
+      providesTags: ["Shift"],
+    }),
+    getPendingLeaves: builder.query<PendingLeave[], void>({
+      query: () => "/dashboard/pending-leaves",
+      providesTags: ["Leave"],
     }),
   }),
 });
 
-export const { useGetDashboardStatsQuery, useGetRecentActivityQuery } =
-  dashboardApi;
+export const {
+  useGetDashboardStatsQuery,
+  useGetTodayShiftsQuery,
+  useGetPendingLeavesQuery,
+} = dashboardApi;

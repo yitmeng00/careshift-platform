@@ -6,12 +6,15 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import ActivityFeed from "./components/ActivityFeed";
+import OvertimeAlertsPanel from "./components/OvertimeAlertsPanel";
+import PendingLeavesPanel from "./components/PendingLeavesPanel";
 import StatCard from "./components/StatCard";
 import type { StatCardVariant } from "./components/StatCard";
+import TodayShiftsPanel from "./components/TodayShiftsPanel";
 import {
   useGetDashboardStatsQuery,
-  useGetRecentActivityQuery,
+  useGetPendingLeavesQuery,
+  useGetTodayShiftsQuery,
 } from "./dashboardApi";
 import { useAppSelector } from "../../app/hooks";
 import type { DashboardStats } from "../../types/dashboard";
@@ -56,11 +59,19 @@ const STAT_CARD_CONFIGS: StatCardConfig[] = [
   },
 ];
 
+const LEAVE_REVIEWER_ROLES = new Set(["Admin", "DepartmentLead"]);
+
 export default function DashboardPage() {
   const user = useAppSelector((state) => state.auth.user);
+  const canReviewLeave = user ? LEAVE_REVIEWER_ROLES.has(user.role) : false;
+  const canSeeOvertime =
+    user?.role === "Admin" || user?.role === "DepartmentLead";
+
   const { data: stats, isLoading: statsLoading } = useGetDashboardStatsQuery();
-  const { data: activity, isLoading: activityLoading } =
-    useGetRecentActivityQuery();
+  const { data: todayShifts, isLoading: shiftsLoading } =
+    useGetTodayShiftsQuery();
+  const { data: pendingLeaves, isLoading: leavesLoading } =
+    useGetPendingLeavesQuery(undefined, { skip: !canReviewLeave });
 
   return (
     <div className="p-4 lg:p-9 max-w-6xl mx-auto">
@@ -87,8 +98,35 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Activity feed */}
-      <ActivityFeed entries={activity} isLoading={activityLoading} />
+      {/* Detail panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Today's shifts — full-width on its own row, spans 2 cols when others present */}
+        <div
+          className={
+            canReviewLeave || canSeeOvertime ? "lg:col-span-2" : "lg:col-span-3"
+          }
+        >
+          <TodayShiftsPanel shifts={todayShifts} isLoading={shiftsLoading} />
+        </div>
+
+        {/* Right column: role-gated panels */}
+        {(canReviewLeave || canSeeOvertime) && (
+          <div className="flex flex-col gap-4">
+            {canReviewLeave && (
+              <PendingLeavesPanel
+                leaves={pendingLeaves}
+                isLoading={leavesLoading}
+              />
+            )}
+            {canSeeOvertime && (
+              <OvertimeAlertsPanel
+                count={stats?.overtimeAlerts ?? 0}
+                isLoading={statsLoading}
+              />
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

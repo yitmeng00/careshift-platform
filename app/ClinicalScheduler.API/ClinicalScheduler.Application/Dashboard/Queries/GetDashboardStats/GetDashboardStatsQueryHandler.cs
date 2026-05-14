@@ -21,29 +21,26 @@ public class GetDashboardStatsQueryHandler(IApplicationDbContext context)
         var weekStart = today.AddDays(-daysFromMonday);
         var weekEnd = weekStart.AddDays(7);
 
-        // Run all four counts concurrently
-        var onDutyTask = context.Shifts
+        var onDutyToday = await context.Shifts
             .CountAsync(shift => shift.StartTime < tomorrow && shift.EndTime > today, cancellationToken);
 
-        var pendingLeavesTask = context.LeaveRequests
+        var pendingLeaves = await context.LeaveRequests
             .CountAsync(leave => leave.Status == LeaveStatus.Pending, cancellationToken);
 
-        // Each shift is 8 h; > 5 shifts in a week exceeds 40 h
-        var overtimeTask = context.Shifts
+        // Each shift is 8 h; > 5 shifts in a week = overtime
+        var overtimeAlerts = await context.Shifts
             .Where(shift => shift.StartTime >= weekStart && shift.StartTime < weekEnd)
             .GroupBy(shift => shift.StaffId)
-            .Where(group => group.Count() > 5)
-            .CountAsync(cancellationToken);
+            .Select(g => new { Count = g.Count() })
+            .CountAsync(x => x.Count > 5, cancellationToken);
 
-        var activeStaffTask = context.Staff
+        var activeStaff = await context.Staff
             .CountAsync(staff => staff.IsActive, cancellationToken);
 
-        await Task.WhenAll(onDutyTask, pendingLeavesTask, overtimeTask, activeStaffTask);
-
         return new DashboardStatsDto(
-            OnDutyToday: onDutyTask.Result,
-            PendingLeaves: pendingLeavesTask.Result,
-            OvertimeAlerts: overtimeTask.Result,
-            ActiveStaff: activeStaffTask.Result);
+            OnDutyToday: onDutyToday,
+            PendingLeaves: pendingLeaves,
+            OvertimeAlerts: overtimeAlerts,
+            ActiveStaff: activeStaff);
     }
 }
