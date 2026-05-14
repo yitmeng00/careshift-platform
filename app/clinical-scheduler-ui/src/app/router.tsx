@@ -4,6 +4,7 @@ import AppContainer from "../components/layout/AppContainer";
 import ComingSoon from "../components/ui/ComingSoon";
 import LoginPage from "../features/auth/LoginPage";
 import DashboardPage from "../features/dashboard/DashboardPage";
+import SchedulePage from "../features/schedule/SchedulePage";
 
 export const router = createBrowserRouter([
   {
@@ -18,7 +19,7 @@ export const router = createBrowserRouter([
       { path: "dashboard", element: <DashboardPage /> },
       {
         path: "schedule",
-        element: <ComingSoon />,
+        element: <SchedulePage />,
       },
       {
         path: "leaves",

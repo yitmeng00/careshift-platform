@@ -1,5 +1,4 @@
 using System.Text;
-using ClinicalScheduler.API.Hubs;
 using Microsoft.EntityFrameworkCore;
 using ClinicalScheduler.API.Middleware;
 using ClinicalScheduler.Application;
@@ -17,7 +16,6 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddSignalR();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -36,19 +34,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
             ClockSkew = TimeSpan.Zero,
-        };
-
-        // Allow JWT via SignalR query string
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = ctx =>
-            {
-                var accessToken = ctx.Request.Query["access_token"];
-                var path = ctx.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
-                    ctx.Token = accessToken;
-                return Task.CompletedTask;
-            },
         };
     });
 
@@ -90,6 +75,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<ScheduleHub>("/hubs/schedule");
 
 app.Run();

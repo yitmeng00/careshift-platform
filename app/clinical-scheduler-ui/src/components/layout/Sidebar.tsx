@@ -99,7 +99,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   return (
     <>
       {/* Desktop sidebar — hidden on mobile */}
-      <aside className="hidden lg:flex w-56 shrink-0 flex-col no-print border-r border-r-slate-200 bg-white z-100">
+      <aside className="hidden lg:flex w-56 shrink-0 flex-col no-print border-r border-r-slate-200 bg-white z-100 h-screen sticky top-0">
         <SidebarContent />
       </aside>
       {/* Mobile full-screen overlay */}
