@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using ClinicalScheduler.API.Hubs;
 using ClinicalScheduler.Application.Shifts.Commands.CreateShift;
 using ClinicalScheduler.Application.Shifts.Commands.DeleteShift;
 using ClinicalScheduler.Application.Shifts.Commands.UpdateShift;
@@ -6,6 +7,7 @@ using ClinicalScheduler.Application.Shifts.Queries.GetShiftsByWeek;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace ClinicalScheduler.API.Controllers.v1;
 
@@ -13,7 +15,7 @@ namespace ClinicalScheduler.API.Controllers.v1;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
-public class ShiftsController(IMediator mediator) : ControllerBase
+public class ShiftsController(IMediator mediator, IHubContext<ScheduleHub> hub) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetByWeek(
@@ -31,6 +33,7 @@ public class ShiftsController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateShiftCommand command, CancellationToken ct)
     {
         var dto = await mediator.Send(command, ct);
+        await hub.Clients.Group($"dept:{dto.DepartmentName}").SendAsync("ShiftCreated", dto, ct);
         return CreatedAtAction(nameof(GetByWeek), new { weekStart = DateOnly.FromDateTime(dto.StartTime) }, dto);
     }
 
@@ -39,6 +42,7 @@ public class ShiftsController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> Update(int id, [FromBody] UpdateShiftRequest request, CancellationToken ct)
     {
         var dto = await mediator.Send(new UpdateShiftCommand(id, request.NewDate), ct);
+        await hub.Clients.Group($"dept:{dto.DepartmentName}").SendAsync("ShiftUpdated", dto, ct);
         return Ok(dto);
     }
 
@@ -46,7 +50,8 @@ public class ShiftsController(IMediator mediator) : ControllerBase
     [Authorize(Roles = "Admin,DepartmentLead")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        await mediator.Send(new DeleteShiftCommand(id), ct);
+        var info = await mediator.Send(new DeleteShiftCommand(id), ct);
+        await hub.Clients.Group($"dept:{info.DepartmentName}").SendAsync("ShiftDeleted", new { id }, ct);
         return NoContent();
     }
 }

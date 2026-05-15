@@ -19,5 +19,4 @@ public class Staff
     public Department Department { get; set; } = null!;
     public ICollection<Shift> Shifts { get; set; } = [];
     public ICollection<LeaveRequest> LeaveRequests { get; set; } = [];
-    public ICollection<AuditLog> AuditLogs { get; set; } = [];
 }
