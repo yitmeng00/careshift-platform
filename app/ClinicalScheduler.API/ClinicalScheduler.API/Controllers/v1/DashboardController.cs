@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using ClinicalScheduler.Application.Dashboard.Queries.GetDashboardStats;
 using ClinicalScheduler.Application.Dashboard.Queries.GetPendingLeaves;
 using ClinicalScheduler.Application.Dashboard.Queries.GetTodayShifts;
@@ -6,10 +7,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace ClinicalScheduler.API.Controllers;
+namespace ClinicalScheduler.API.Controllers.v1;
 
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class DashboardController(IMediator mediator) : ControllerBase
 {

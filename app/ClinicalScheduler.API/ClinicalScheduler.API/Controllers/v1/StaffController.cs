@@ -1,12 +1,14 @@
+using Asp.Versioning;
 using ClinicalScheduler.Application.Personnel.Queries.GetStaffList;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ClinicalScheduler.API.Controllers;
+namespace ClinicalScheduler.API.Controllers.v1;
 
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class StaffController(IMediator mediator) : ControllerBase
 {
