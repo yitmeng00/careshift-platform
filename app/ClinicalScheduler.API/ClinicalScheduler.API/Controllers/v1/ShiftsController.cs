@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using ClinicalScheduler.Application.Shifts.Commands.CreateShift;
 using ClinicalScheduler.Application.Shifts.Commands.DeleteShift;
 using ClinicalScheduler.Application.Shifts.Commands.UpdateShift;
@@ -6,10 +7,11 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ClinicalScheduler.API.Controllers;
+namespace ClinicalScheduler.API.Controllers.v1;
 
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public class ShiftsController(IMediator mediator) : ControllerBase
 {
@@ -44,7 +46,7 @@ public class ShiftsController(IMediator mediator) : ControllerBase
     [Authorize(Roles = "Admin,DepartmentLead")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        var info = await mediator.Send(new DeleteShiftCommand(id), ct);
+        await mediator.Send(new DeleteShiftCommand(id), ct);
         return NoContent();
     }
 }
