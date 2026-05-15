@@ -123,12 +123,6 @@ public class DbSeeder(AppDbContext context, ILogger<DbSeeder> logger, IPasswordH
         };
 
         context.LeaveRequests.AddRange(leaveRequests);
-
-        context.AuditLogs.AddRange([
-            new AuditLog { StaffId = staffMap["Admin User"].Id, Action = "Approved leave", EntityType = "LeaveRequest", PerformedBy = "Admin User", Detail = "Aisha Johnson · Sick Leave", Icon = "✓", Timestamp = DateTime.UtcNow.AddHours(-1) },
-            new AuditLog { StaffId = staffMap["Admin User"].Id, Action = "Database seeded", EntityType = "System", PerformedBy = "System", Detail = "Initial seed completed", Icon = "+", Timestamp = DateTime.UtcNow },
-        ]);
-
         await context.SaveChangesAsync();
         logger.LogInformation("Core data seeding completed.");
     }
