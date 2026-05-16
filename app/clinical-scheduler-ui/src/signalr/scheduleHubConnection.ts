@@ -6,10 +6,12 @@ import {
 
 let connection: HubConnection | null = null;
 
-export const createScheduleHubConnection = (token: string): HubConnection => {
+export const createScheduleHubConnection = (
+  getToken: () => Promise<string>,
+): HubConnection => {
   connection = new HubConnectionBuilder()
     .withUrl("/hubs/schedule", {
-      accessTokenFactory: () => token,
+      accessTokenFactory: getToken,
     })
     .withAutomaticReconnect()
     .configureLogging(LogLevel.Warning)
@@ -23,11 +25,11 @@ export const getScheduleHubConnection = (): HubConnection | null => {
 };
 
 export const startScheduleHub = async (
-  token: string,
+  getToken: () => Promise<string>,
 ): Promise<HubConnection> => {
   if (connection?.state === "Connected") return connection;
 
-  const hub = createScheduleHubConnection(token);
+  const hub = createScheduleHubConnection(getToken);
   await hub.start();
   return hub;
 };
