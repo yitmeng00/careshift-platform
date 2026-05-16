@@ -8,13 +8,12 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
-const storedToken = localStorage.getItem("access_token");
 const storedUser = localStorage.getItem("auth_user");
 
 const initialState: AuthState = {
-  token: storedToken,
+  token: null,
   user: storedUser ? (JSON.parse(storedUser) as AuthUser) : null,
-  isAuthenticated: !!storedToken,
+  isAuthenticated: false,
 };
 
 const authSlice = createSlice({
@@ -28,14 +27,12 @@ const authSlice = createSlice({
       state.token = action.payload.token;
       state.user = action.payload.user;
       state.isAuthenticated = true;
-      localStorage.setItem("access_token", action.payload.token);
       localStorage.setItem("auth_user", JSON.stringify(action.payload.user));
     },
     logout(state) {
       state.token = null;
       state.user = null;
       state.isAuthenticated = false;
-      localStorage.removeItem("access_token");
       localStorage.removeItem("auth_user");
     },
   },

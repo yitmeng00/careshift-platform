@@ -5,4 +5,6 @@ namespace ClinicalScheduler.Application.Common.Interfaces;
 public interface ITokenService
 {
     string GenerateAccessToken(Staff staff);
+    string GenerateRefreshToken();
+    int RefreshTokenExpiryDays { get; }
 }

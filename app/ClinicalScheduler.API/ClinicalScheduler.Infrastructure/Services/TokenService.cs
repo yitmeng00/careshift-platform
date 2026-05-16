@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using ClinicalScheduler.Application.Common.Interfaces;
 using ClinicalScheduler.Domain.Entities;
@@ -10,13 +11,22 @@ namespace ClinicalScheduler.Infrastructure.Services;
 
 public class TokenService(IConfiguration configuration) : ITokenService
 {
+    public int RefreshTokenExpiryDays =>
+        int.Parse(configuration["JwtSettings:RefreshTokenExpiryDays"] ?? "7");
+
+    public string GenerateRefreshToken()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(64);
+        return Convert.ToBase64String(bytes);
+    }
+
     public string GenerateAccessToken(Staff staff)
     {
         var jwtSettings = configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is not configured.");
         var issuer = jwtSettings["Issuer"] ?? "ClinicalScheduler";
         var audience = jwtSettings["Audience"] ?? "ClinicalScheduler";
-        var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "60");
+        var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "15");
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

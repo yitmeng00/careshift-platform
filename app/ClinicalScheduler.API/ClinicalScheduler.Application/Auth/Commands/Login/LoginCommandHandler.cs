@@ -1,18 +1,19 @@
 using ClinicalScheduler.Application.Auth.Dtos;
 using ClinicalScheduler.Application.Common.Exceptions;
 using ClinicalScheduler.Application.Common.Interfaces;
+using ClinicalScheduler.Domain.Entities;
 using MediatR;
-
 
 namespace ClinicalScheduler.Application.Auth.Commands.Login;
 
 public class LoginCommandHandler(
     IStaffRepository staffRepository,
     ITokenService tokenService,
-    IPasswordHasher passwordHasher)
-    : IRequestHandler<LoginCommand, LoginResponseDto>
+    IPasswordHasher passwordHasher,
+    IApplicationDbContext context)
+    : IRequestHandler<LoginCommand, LoginResult>
 {
-    public async Task<LoginResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<LoginResult> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         var staff = await staffRepository.GetByEmailAsync(request.Email, cancellationToken)
             ?? throw new UnauthorizedException("Invalid email or password.");
@@ -23,11 +24,22 @@ public class LoginCommandHandler(
         if (!passwordHasher.Verify(request.Password, staff.PasswordHash))
             throw new UnauthorizedException("Invalid email or password.");
 
-        var token = tokenService.GenerateAccessToken(staff);
+        var accessToken = tokenService.GenerateAccessToken(staff);
+        var refreshToken = tokenService.GenerateRefreshToken();
 
-        return new LoginResponseDto(
-            AccessToken: token,
-            ExpiresIn: 3600,
+        context.RefreshTokens.Add(new RefreshToken
+        {
+            Token = refreshToken,
+            StaffId = staff.Id,
+            ExpiresAt = DateTime.UtcNow.AddDays(tokenService.RefreshTokenExpiryDays),
+        });
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return new LoginResult(
+            AccessToken: accessToken,
+            RefreshToken: refreshToken,
+            ExpiresIn: 15 * 60,
             Staff: new StaffProfileDto(
                 Id: staff.Id,
                 FullName: staff.FullName,
