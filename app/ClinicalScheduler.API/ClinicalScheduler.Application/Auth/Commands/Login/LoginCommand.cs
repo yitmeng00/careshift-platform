@@ -3,4 +3,4 @@ using MediatR;
 
 namespace ClinicalScheduler.Application.Auth.Commands.Login;
 
-public record LoginCommand(string Email, string Password) : IRequest<LoginResponseDto>;
+public record LoginCommand(string Email, string Password) : IRequest<LoginResult>;
