@@ -9,6 +9,7 @@ public interface IApplicationDbContext
     DbSet<Shift> Shifts { get; }
     DbSet<LeaveRequest> LeaveRequests { get; }
     DbSet<Department> Departments { get; }
+    DbSet<RefreshToken> RefreshTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
