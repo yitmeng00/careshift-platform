@@ -95,7 +95,7 @@ CREATE INDEX "IX_Shifts_DepartmentId" ON "Shifts" ("DepartmentId");
 
 -- =============================================================================
 -- LEAVE REQUESTS
--- LeaveType:   Annual | Sick | Training | Personal
+-- LeaveType:   Annual | Sick | MaternityPaternity | Compassionate | Emergency | Unpaid
 -- Status:      Pending | Approved | Rejected
 -- =============================================================================
 CREATE TABLE "LeaveRequests" (
@@ -196,5 +196,6 @@ INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES
     ('20260421060458_InitialCreate',   '10.0.6'),
     ('20260515152546_RemoveAuditLog',  '10.0.6'),
-    ('20260516133720_AddRefreshToken', '10.0.6')
+    ('20260516133720_AddRefreshToken', '10.0.6'),
+    ('20260516144840_UpdateLeaveTypes','10.0.6')
 ON CONFLICT DO NOTHING;

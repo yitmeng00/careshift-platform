@@ -6,6 +6,8 @@ using ClinicalScheduler.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
+
+
 namespace ClinicalScheduler.Application.Shifts.Commands.CreateShift;
 
 public class CreateShiftCommandHandler(IApplicationDbContext context)
@@ -30,6 +32,17 @@ public class CreateShiftCommandHandler(IApplicationDbContext context)
         if (hasConflict)
             throw new ConflictException(
                 $"{staff.FullName} already has a shift that overlaps with {request.ShiftType} on {request.Date:d}.");
+
+        var isOnLeave = await context.LeaveRequests.AnyAsync(
+            l => l.StaffId == request.StaffId &&
+                 l.Status == LeaveStatus.Approved &&
+                 l.StartDate <= request.Date &&
+                 l.EndDate >= request.Date,
+            cancellationToken);
+
+        if (isOnLeave)
+            throw new ConflictException(
+                $"{staff.FullName} has an approved leave request on {request.Date:d}.");
 
         var shift = new Shift
         {

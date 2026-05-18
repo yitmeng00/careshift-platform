@@ -5,7 +5,22 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { NAV_ITEMS, ROLE_LABELS } from "../../constants/navbar";
 import { logout } from "../../features/auth/authSlice";
+import {
+  selectPendingCount,
+  useGetLeaveRequestsQuery,
+} from "../../features/leaves/leavesApi";
 import type { StaffRole } from "../../types/auth";
+
+function LeavePendingBadge() {
+  const { data: leaves = [] } = useGetLeaveRequestsQuery();
+  const count = selectPendingCount(leaves);
+  if (count === 0) return null;
+  return (
+    <span className="min-w-5 h-5 px-1.5 rounded-full bg-accent text-white text-xs font-bold flex items-center justify-center">
+      {count}
+    </span>
+  );
+}
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -63,7 +78,8 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
               }
             >
               <Icon size={20} className="shrink-0" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.to === "/leaves" && <LeavePendingBadge />}
             </NavLink>
           );
         })}

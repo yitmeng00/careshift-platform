@@ -1,5 +1,6 @@
 import clsx from "clsx";
 
+import type { ApprovedLeave } from "../../../types/leave";
 import type { Shift, ShiftType } from "../../../types/shift";
 import { toISODate } from "../../../utils/dateUtils";
 
@@ -7,6 +8,7 @@ interface MonthGridProps {
   year: number;
   month: number; // 0-based
   shifts: Shift[];
+  approvedLeaves: ApprovedLeave[];
 }
 
 const DAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -34,7 +36,12 @@ const SHIFT_STYLE: Record<
   },
 };
 
-export default function MonthGrid({ year, month, shifts }: MonthGridProps) {
+export default function MonthGrid({
+  year,
+  month,
+  shifts,
+  approvedLeaves,
+}: MonthGridProps) {
   const today = toISODate(new Date());
   const monthStr = String(month + 1).padStart(2, "0");
 
@@ -48,6 +55,17 @@ export default function MonthGrid({ year, month, shifts }: MonthGridProps) {
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
   while (cells.length % 7 !== 0) cells.push(null);
+
+  // Count unique staff on approved leave per ISO date
+  const leaveCountByDate = new Map<string, number>();
+  for (const leave of approvedLeaves) {
+    const start = new Date(leave.startDate + "T00:00:00");
+    const end = new Date(leave.endDate + "T00:00:00");
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const iso = toISODate(new Date(d));
+      leaveCountByDate.set(iso, (leaveCountByDate.get(iso) ?? 0) + 1);
+    }
+  }
 
   // Group shifts by local ISO date → shift type counts
   const countsByDate = new Map<string, Record<ShiftType, number>>();
@@ -93,6 +111,7 @@ export default function MonthGrid({ year, month, shifts }: MonthGridProps) {
           const isToday = isoDate === today;
           const hasShifts =
             counts !== undefined && SHIFT_TYPE_ORDER.some((t) => counts[t] > 0);
+          const leaveCount = leaveCountByDate.get(isoDate) ?? 0;
 
           return (
             <div
@@ -113,6 +132,17 @@ export default function MonthGrid({ year, month, shifts }: MonthGridProps) {
                   {day}
                 </span>
               </div>
+
+              {/* On-leave indicator */}
+              {leaveCount > 0 && (
+                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded border text-xs font-medium bg-orange-50 border-orange-100 text-orange-600">
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-orange-400" />
+                  <span className="truncate">On Leave</span>
+                  <span className="ml-auto font-bold shrink-0">
+                    ×{leaveCount}
+                  </span>
+                </div>
+              )}
 
               {/* Shift type count rows */}
               {hasShifts ? (
