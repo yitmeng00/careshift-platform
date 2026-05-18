@@ -1,5 +1,10 @@
 import { api } from "../../services/api";
-import type { ApprovedLeave, LeaveRequest, LeaveStatus, LeaveType } from "../../types/leave";
+import type {
+  ApprovedLeave,
+  LeaveRequest,
+  LeaveStatus,
+  LeaveType,
+} from "../../types/leave";
 
 interface SubmitLeaveRequest {
   leaveType: LeaveType;
@@ -20,8 +25,14 @@ export const leavesApi = api.injectEndpoints({
       providesTags: ["Leave"],
     }),
 
-    getApprovedLeaves: builder.query<ApprovedLeave[], { from: string; to: string }>({
-      query: ({ from, to }) => ({ url: "/leaves/approved", params: { from, to } }),
+    getApprovedLeaves: builder.query<
+      ApprovedLeave[],
+      { from: string; to: string }
+    >({
+      query: ({ from, to }) => ({
+        url: "/leaves/approved",
+        params: { from, to },
+      }),
       providesTags: ["Leave"],
     }),
 
@@ -30,8 +41,15 @@ export const leavesApi = api.injectEndpoints({
       invalidatesTags: ["Leave"],
     }),
 
-    reviewLeave: builder.mutation<LeaveRequest, { id: number } & ReviewLeaveRequest>({
-      query: ({ id, ...body }) => ({ url: `/leaves/${id}/review`, method: "PUT", body }),
+    reviewLeave: builder.mutation<
+      LeaveRequest,
+      { id: number } & ReviewLeaveRequest
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/leaves/${id}/review`,
+        method: "PUT",
+        body,
+      }),
       invalidatesTags: ["Leave"],
     }),
 
@@ -53,5 +71,7 @@ export const {
 export const selectPendingCount = (leaves: LeaveRequest[]) =>
   leaves.filter((l) => l.status === "Pending").length;
 
-export const filterByStatus = (leaves: LeaveRequest[], status: LeaveStatus | "All") =>
-  status === "All" ? leaves : leaves.filter((l) => l.status === status);
+export const filterByStatus = (
+  leaves: LeaveRequest[],
+  status: LeaveStatus | "All",
+) => (status === "All" ? leaves : leaves.filter((l) => l.status === status));

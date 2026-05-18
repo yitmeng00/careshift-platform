@@ -4,7 +4,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import FormField from "../../../components/ui/FormField";
-import { LEAVE_TYPE_LABELS, LEAVE_TYPES } from "../../../types/leave";
+import {
+  LEAVE_TYPE_LABELS,
+  LEAVE_TYPES,
+  type LeaveType,
+} from "../../../types/leave";
 import { useSubmitLeaveMutation } from "../leavesApi";
 
 const schema = z
@@ -41,7 +45,7 @@ export default function SubmitLeaveModal({ onClose }: SubmitLeaveModalProps) {
 
   const onSubmit = async (values: FormValues) => {
     await submitLeave({
-      leaveType: values.leaveType as any,
+      leaveType: values.leaveType as LeaveType,
       startDate: values.startDate,
       endDate: values.endDate,
       reason: values.reason,
@@ -59,7 +63,9 @@ export default function SubmitLeaveModal({ onClose }: SubmitLeaveModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-slate-900">Request Leave</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Request Leave
+          </h2>
           <button
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"

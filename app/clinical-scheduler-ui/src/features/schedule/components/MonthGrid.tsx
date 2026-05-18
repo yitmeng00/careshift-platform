@@ -36,7 +36,12 @@ const SHIFT_STYLE: Record<
   },
 };
 
-export default function MonthGrid({ year, month, shifts, approvedLeaves }: MonthGridProps) {
+export default function MonthGrid({
+  year,
+  month,
+  shifts,
+  approvedLeaves,
+}: MonthGridProps) {
   const today = toISODate(new Date());
   const monthStr = String(month + 1).padStart(2, "0");
 
@@ -133,7 +138,9 @@ export default function MonthGrid({ year, month, shifts, approvedLeaves }: Month
                 <div className="flex items-center gap-1 px-1.5 py-0.5 rounded border text-xs font-medium bg-orange-50 border-orange-100 text-orange-600">
                   <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-orange-400" />
                   <span className="truncate">On Leave</span>
-                  <span className="ml-auto font-bold shrink-0">×{leaveCount}</span>
+                  <span className="ml-auto font-bold shrink-0">
+                    ×{leaveCount}
+                  </span>
                 </div>
               )}
 

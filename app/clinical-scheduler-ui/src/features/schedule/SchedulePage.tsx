@@ -14,11 +14,11 @@ import {
   useUpdateShiftMutation,
 } from "./shiftsApi";
 import { useAppSelector } from "../../app/hooks";
-import { useGetApprovedLeavesQuery } from "../leaves/leavesApi";
 import { useWeekNavigation } from "../../hooks/useWeekNavigation";
 import type { createShiftSchema } from "../../schemas/shift";
 import { useGetStaffListQuery } from "../../services/staffApi";
 import { toISODate } from "../../utils/dateUtils";
+import { useGetApprovedLeavesQuery } from "../leaves/leavesApi";
 
 type CreateShiftFormValues = z.infer<typeof createShiftSchema>;
 type ViewMode = "week" | "month";
@@ -83,7 +83,8 @@ export default function SchedulePage() {
     { from: monthStart, to: monthEnd },
     { skip: view !== "month" },
   );
-  const approvedLeaves = view === "week" ? weekApprovedLeaves : monthApprovedLeaves;
+  const approvedLeaves =
+    view === "week" ? weekApprovedLeaves : monthApprovedLeaves;
 
   const [createShift, { isLoading: isCreating }] = useCreateShiftMutation();
   const [deleteShift] = useDeleteShiftMutation();
@@ -248,7 +249,12 @@ export default function SchedulePage() {
           </div>
         </div>
       ) : (
-        <MonthGrid year={monthYear} month={monthMonth} shifts={monthShifts} approvedLeaves={approvedLeaves} />
+        <MonthGrid
+          year={monthYear}
+          month={monthMonth}
+          shifts={monthShifts}
+          approvedLeaves={approvedLeaves}
+        />
       )}
 
       {modalOpen && (
