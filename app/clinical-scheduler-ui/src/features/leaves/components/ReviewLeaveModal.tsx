@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import type { LeaveRequest } from "../../../types/leave";
 import { LEAVE_TYPE_LABELS } from "../../../types/leave";
+import { formatDateTime, formatLongDateRange } from "../../../utils/dateUtils";
 import { useReviewLeaveMutation } from "../leavesApi";
 
 interface ReviewLeaveModalProps {
@@ -24,33 +25,6 @@ const ACTION_LABEL: Record<string, string> = {
   rejected: "rejected this request",
 };
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatDateRange(start: string, end: string) {
-  const fmt = (s: string) =>
-    new Date(s + "T00:00:00").toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  return start === end ? fmt(start) : `${fmt(start)}–${fmt(end)}`;
-}
-
 export default function ReviewLeaveModal({
   leave,
   canReview,
@@ -60,7 +34,11 @@ export default function ReviewLeaveModal({
   const [reviewLeave, { isLoading }] = useReviewLeaveMutation();
 
   const handleReview = async (action: "Approve" | "Reject") => {
-    await reviewLeave({ id: leave.id, action, note: note || undefined }).unwrap();
+    await reviewLeave({
+      id: leave.id,
+      action,
+      note: note || undefined,
+    }).unwrap();
     onClose();
   };
 
@@ -102,7 +80,7 @@ export default function ReviewLeaveModal({
                   Dates
                 </p>
                 <p className="text-sm font-medium text-slate-800">
-                  {formatDateRange(leave.startDate, leave.endDate)}
+                  {formatLongDateRange(leave.startDate, leave.endDate)}
                 </p>
               </div>
               <div>
@@ -145,7 +123,10 @@ export default function ReviewLeaveModal({
                         <span className="font-semibold">{entry.by}</span>{" "}
                         {ACTION_LABEL[entry.action] ?? entry.action}
                         {entry.note && (
-                          <span className="text-slate-500"> — {entry.note}</span>
+                          <span className="text-slate-500">
+                            {" "}
+                            — {entry.note}
+                          </span>
                         )}
                       </p>
                       <p className="text-xs text-slate-400 mt-0.5">

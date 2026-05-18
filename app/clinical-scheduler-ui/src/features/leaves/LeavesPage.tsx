@@ -2,12 +2,17 @@ import clsx from "clsx";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
+import ReviewLeaveModal from "./components/ReviewLeaveModal";
+import SubmitLeaveModal from "./components/SubmitLeaveModal";
+import {
+  filterByStatus,
+  selectPendingCount,
+  useGetLeaveRequestsQuery,
+} from "./leavesApi";
 import { useAppSelector } from "../../app/hooks";
 import type { LeaveRequest, LeaveStatus } from "../../types/leave";
 import { LEAVE_TYPE_LABELS } from "../../types/leave";
-import ReviewLeaveModal from "./components/ReviewLeaveModal";
-import SubmitLeaveModal from "./components/SubmitLeaveModal";
-import { filterByStatus, selectPendingCount, useGetLeaveRequestsQuery } from "./leavesApi";
+import { formatShortDate, formatShortDateRange } from "../../utils/dateUtils";
 
 type TabStatus = "All" | LeaveStatus;
 
@@ -18,20 +23,6 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 const TABS: TabStatus[] = ["All", "Pending", "Approved", "Rejected"];
-
-function formatDate(iso: string) {
-  const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function formatDateRange(start: string, end: string) {
-  if (start === end) return formatDate(start);
-  return `${formatDate(start)} – ${formatDate(end)}`;
-}
-
-function formatSubmitted(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
 
 export default function LeavesPage() {
   const user = useAppSelector((s) => s.auth.user);
@@ -52,7 +43,9 @@ export default function LeavesPage() {
   const filtered = filterByStatus(leaves, activeTab);
 
   const countFor = (tab: TabStatus) =>
-    tab === "All" ? leaves.length : leaves.filter((l) => l.status === tab).length;
+    tab === "All"
+      ? leaves.length
+      : leaves.filter((l) => l.status === tab).length;
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
@@ -65,7 +58,9 @@ export default function LeavesPage() {
               {pendingCount} pending approval
             </p>
           ) : (
-            <p className="text-sm text-slate-500 mt-0.5">No pending approvals</p>
+            <p className="text-sm text-slate-500 mt-0.5">
+              No pending approvals
+            </p>
           )}
         </div>
         {canSubmit && (
@@ -113,10 +108,13 @@ export default function LeavesPage() {
       {/* Table */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         {isLoading ? (
-          <div className="py-16 text-center text-sm text-slate-400">Loading…</div>
+          <div className="py-16 text-center text-sm text-slate-400">
+            Loading…
+          </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-sm text-slate-400">
-            No {activeTab !== "All" ? activeTab.toLowerCase() : ""} leave requests.
+            No {activeTab !== "All" ? activeTab.toLowerCase() : ""} leave
+            requests.
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -156,8 +154,12 @@ export default function LeavesPage() {
                         {leave.staffInitials}
                       </div>
                       <div>
-                        <p className="font-medium text-slate-800">{leave.staffFullName}</p>
-                        <p className="text-xs text-slate-400">{leave.staffDepartment}</p>
+                        <p className="font-medium text-slate-800">
+                          {leave.staffFullName}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {leave.staffDepartment}
+                        </p>
                       </div>
                     </div>
                   </td>
@@ -171,7 +173,7 @@ export default function LeavesPage() {
 
                   {/* Dates */}
                   <td className="px-3 py-3.5 text-slate-700 whitespace-nowrap">
-                    {formatDateRange(leave.startDate, leave.endDate)}
+                    {formatShortDateRange(leave.startDate, leave.endDate)}
                   </td>
 
                   {/* Reason */}
@@ -181,7 +183,7 @@ export default function LeavesPage() {
 
                   {/* Submitted */}
                   <td className="px-3 py-3.5 text-slate-400 hidden lg:table-cell">
-                    {formatSubmitted(leave.submittedAt)}
+                    {formatShortDate(leave.submittedAt)}
                   </td>
 
                   {/* Status badge */}
@@ -202,7 +204,9 @@ export default function LeavesPage() {
                       onClick={() => setReviewing(leave)}
                       className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer"
                     >
-                      {canReview && leave.status === "Pending" ? "Review" : "View"}
+                      {canReview && leave.status === "Pending"
+                        ? "Review"
+                        : "View"}
                     </button>
                   </td>
                 </tr>
