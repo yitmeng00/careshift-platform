@@ -8,6 +8,7 @@ import type { Shift, ShiftType } from "../../../types/shift";
 interface ShiftCardProps {
   shift: Shift;
   canEdit: boolean;
+  isOnLeave?: boolean;
   onDelete: (id: number) => void;
 }
 
@@ -26,6 +27,7 @@ const SHIFT_STYLES: Record<ShiftType, { badge: string; border: string }> = {
 export default function ShiftCard({
   shift,
   canEdit,
+  isOnLeave = false,
   onDelete,
 }: ShiftCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -59,7 +61,7 @@ export default function ShiftCard({
           {shift.staffName}
         </span>
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-wrap">
         <span
           className={clsx(
             "text-xs px-1.5 py-0.5 rounded font-medium",
@@ -68,6 +70,11 @@ export default function ShiftCard({
         >
           {shift.shiftType}
         </span>
+        {isOnLeave && (
+          <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-orange-100 text-orange-600">
+            On Leave
+          </span>
+        )}
       </div>
       {canEdit && (
         <button

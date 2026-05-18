@@ -14,6 +14,7 @@ import {
   useUpdateShiftMutation,
 } from "./shiftsApi";
 import { useAppSelector } from "../../app/hooks";
+import { useGetApprovedLeavesQuery } from "../leaves/leavesApi";
 import { useWeekNavigation } from "../../hooks/useWeekNavigation";
 import type { createShiftSchema } from "../../schemas/shift";
 import { useGetStaffListQuery } from "../../services/staffApi";
@@ -70,6 +71,19 @@ export default function SchedulePage() {
       { monthStart, departmentId: deptFilter },
       { skip: view !== "month" },
     );
+
+  const weekEnd = weekDays.length > 0 ? toISODate(weekDays[6]) : weekStartIso;
+  const monthEnd = toISODate(new Date(monthYear, monthMonth + 1, 0));
+
+  const { data: weekApprovedLeaves = [] } = useGetApprovedLeavesQuery(
+    { from: weekStartIso, to: weekEnd },
+    { skip: view !== "week" },
+  );
+  const { data: monthApprovedLeaves = [] } = useGetApprovedLeavesQuery(
+    { from: monthStart, to: monthEnd },
+    { skip: view !== "month" },
+  );
+  const approvedLeaves = view === "week" ? weekApprovedLeaves : monthApprovedLeaves;
 
   const [createShift, { isLoading: isCreating }] = useCreateShiftMutation();
   const [deleteShift] = useDeleteShiftMutation();
@@ -226,6 +240,7 @@ export default function SchedulePage() {
               weekDays={weekDays}
               shifts={weekShifts}
               canEdit={canEdit}
+              approvedLeaves={approvedLeaves}
               onDeleteShift={handleDelete}
               onCreateShift={openCreate}
               onMoveShift={handleMove}
@@ -233,12 +248,13 @@ export default function SchedulePage() {
           </div>
         </div>
       ) : (
-        <MonthGrid year={monthYear} month={monthMonth} shifts={monthShifts} />
+        <MonthGrid year={monthYear} month={monthMonth} shifts={monthShifts} approvedLeaves={approvedLeaves} />
       )}
 
       {modalOpen && (
         <CreateShiftModal
           defaultDate={defaultDate}
+          approvedLeaves={approvedLeaves}
           onSubmit={handleCreate}
           onClose={() => setModalOpen(false)}
           isSubmitting={isCreating}

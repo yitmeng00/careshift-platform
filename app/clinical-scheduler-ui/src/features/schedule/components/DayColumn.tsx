@@ -11,6 +11,7 @@ interface DayColumnProps {
   shifts: Shift[];
   isToday: boolean;
   canEdit: boolean;
+  onLeaveStaffIds: Set<number>;
   onDelete: (id: number) => void;
   onCreateHere: (date: string) => void;
 }
@@ -22,6 +23,7 @@ export default function DayColumn({
   shifts,
   isToday,
   canEdit,
+  onLeaveStaffIds,
   onDelete,
   onCreateHere,
 }: DayColumnProps) {
@@ -61,6 +63,7 @@ export default function DayColumn({
             key={shift.id}
             shift={shift}
             canEdit={canEdit}
+            isOnLeave={onLeaveStaffIds.has(shift.staffId)}
             onDelete={onDelete}
           />
         ))}

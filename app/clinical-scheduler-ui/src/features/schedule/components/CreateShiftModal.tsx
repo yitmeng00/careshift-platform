@@ -8,12 +8,14 @@ import type { z } from "zod";
 import FormField from "../../../components/ui/FormField";
 import { createShiftSchema } from "../../../schemas/shift";
 import { useGetStaffListQuery } from "../../../services/staffApi";
+import type { ApprovedLeave } from "../../../types/leave";
 
 type CreateShiftFormValues = z.infer<typeof createShiftSchema>;
 type ShiftTypeOption = "Morning" | "Afternoon" | "Night";
 
 interface CreateShiftModalProps {
   defaultDate?: string;
+  approvedLeaves: ApprovedLeave[];
   onSubmit: (values: CreateShiftFormValues) => Promise<void>;
   onClose: () => void;
   isSubmitting: boolean;
@@ -28,6 +30,7 @@ const SHIFT_TIME_LABELS: Record<ShiftTypeOption, string> = {
 
 export default function CreateShiftModal({
   defaultDate,
+  approvedLeaves,
   onSubmit,
   onClose,
   isSubmitting,
@@ -43,11 +46,27 @@ export default function CreateShiftModal({
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CreateShiftFormValues>({
     resolver: zodResolver(createShiftSchema),
     defaultValues: { date: defaultDate ?? "", shiftType: "Morning" },
   });
+
+  const watchedStaffId = Number(watch("staffId"));
+  const watchedDate = watch("date");
+  const staffOnLeave =
+    watchedStaffId > 0 &&
+    watchedDate &&
+    approvedLeaves.some(
+      (l) =>
+        l.staffId === watchedStaffId &&
+        l.startDate <= watchedDate &&
+        l.endDate >= watchedDate,
+    );
+  const staffOnLeaveName = staffOnLeave
+    ? (staffList.find((s) => s.id === watchedStaffId)?.fullName ?? "This staff member")
+    : null;
 
   return (
     <div
@@ -139,6 +158,15 @@ export default function CreateShiftModal({
             />
           </FormField>
 
+          {staffOnLeaveName && (
+            <div className="flex gap-2 p-3 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-xs">
+              <span className="shrink-0">⚠️</span>
+              <span>
+                <strong>{staffOnLeaveName}</strong> has an approved leave on this date. The shift cannot be created.
+              </span>
+            </div>
+          )}
+
           <div className="flex gap-3 pt-1">
             <button
               type="button"
@@ -149,11 +177,11 @@ export default function CreateShiftModal({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!staffOnLeave}
               className={clsx(
                 "flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors cursor-pointer",
-                isSubmitting
-                  ? "bg-accent/60 text-white"
+                isSubmitting || staffOnLeave
+                  ? "bg-accent/40 text-white cursor-not-allowed"
                   : "bg-accent text-white hover:bg-accent/90",
               )}
             >
