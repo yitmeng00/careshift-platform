@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import clsx from "clsx";
-import { X } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
 
 import FormField from "../../../components/ui/FormField";
@@ -46,15 +46,15 @@ export default function CreateShiftModal({
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<CreateShiftFormValues>({
     resolver: zodResolver(createShiftSchema),
     defaultValues: { date: defaultDate ?? "", shiftType: "Morning" },
   });
 
-  const watchedStaffId = Number(watch("staffId"));
-  const watchedDate = watch("date");
+  const watchedStaffId = Number(useWatch({ control, name: "staffId" }));
+  const watchedDate = useWatch({ control, name: "date" });
   const staffOnLeave =
     watchedStaffId > 0 &&
     watchedDate &&
@@ -65,7 +65,8 @@ export default function CreateShiftModal({
         l.endDate >= watchedDate,
     );
   const staffOnLeaveName = staffOnLeave
-    ? (staffList.find((s) => s.id === watchedStaffId)?.fullName ?? "This staff member")
+    ? (staffList.find((s) => s.id === watchedStaffId)?.fullName ??
+      "This staff member")
     : null;
 
   return (
@@ -160,9 +161,10 @@ export default function CreateShiftModal({
 
           {staffOnLeaveName && (
             <div className="flex gap-2 p-3 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-xs">
-              <span className="shrink-0">⚠️</span>
+              <AlertTriangle size={14} className="shrink-0 mt-0.5" />
               <span>
-                <strong>{staffOnLeaveName}</strong> has an approved leave on this date. The shift cannot be created.
+                <strong>{staffOnLeaveName}</strong> has an approved leave on
+                this date. The shift cannot be created.
               </span>
             </div>
           )}
