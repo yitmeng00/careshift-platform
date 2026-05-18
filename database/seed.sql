@@ -166,7 +166,7 @@ VALUES
     ),
     (
         (SELECT "Id" FROM "Staff" WHERE "Email"='s.chen@hospital.org'),
-        'Training', CURRENT_DATE + 2, CURRENT_DATE + 2,
+        'Annual', CURRENT_DATE + 2, CURRENT_DATE + 2,
         'ACLS refresher', 'Rejected',
         (SELECT "Id" FROM "Staff" WHERE "Email"='admin@hospital.org'),
         NOW() - INTERVAL '5 days', 'Minimum staffing not met',
@@ -174,7 +174,7 @@ VALUES
     ),
     (
         (SELECT "Id" FROM "Staff" WHERE "Email"='l.torres@hospital.org'),
-        'Personal', CURRENT_DATE + 7, CURRENT_DATE + 7,
+        'Emergency', CURRENT_DATE + 7, CURRENT_DATE + 7,
         'Personal appointment', 'Pending', NULL, NULL, NULL,
         NOW() - INTERVAL '1 day'
     );
