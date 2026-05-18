@@ -4,6 +4,8 @@ public enum LeaveType
 {
     Annual,
     Sick,
-    Training,
-    Personal,
+    MaternityPaternity,
+    Compassionate,
+    Emergency,
+    Unpaid,
 }
