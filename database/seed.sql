@@ -245,3 +245,85 @@ INSERT INTO "SwapAuditEntries" ("ShiftSwapRequestId", "At", "By", "Action", "Not
 SELECT "Id", "SubmittedAt" + INTERVAL '2 hours', 'Kira Patel', 'accepted', 'Happy to swap'
 FROM "ShiftSwapRequests" WHERE "Reason" LIKE 'Medical%';
 
+-- Approved swap: Dr. James Park ↔ Dr. Priya Nair
+INSERT INTO "ShiftSwapRequests"
+    ("RequesterId", "RequesteeId", "RequesterShiftId", "RequesteeShiftId", "Reason", "Status", "SubmittedAt")
+SELECT
+    (SELECT "Id" FROM "Staff" WHERE "Email"='j.park@hospital.org'),
+    (SELECT "Id" FROM "Staff" WHERE "Email"='p.nair@hospital.org'),
+    (SELECT sh."Id" FROM "Shifts" sh
+     JOIN "Staff" s ON s."Id" = sh."StaffId"
+     WHERE s."Email" = 'j.park@hospital.org' AND sh."ShiftType" = 'Morning'
+     ORDER BY sh."StartTime" LIMIT 1),
+    (SELECT sh."Id" FROM "Shifts" sh
+     JOIN "Staff" s ON s."Id" = sh."StaffId"
+     WHERE s."Email" = 'p.nair@hospital.org' AND sh."ShiftType" = 'Morning'
+     ORDER BY sh."StartTime" LIMIT 1),
+    'Attending a conference that week',
+    'Approved',
+    NOW() - INTERVAL '5 days';
+
+INSERT INTO "SwapAuditEntries" ("ShiftSwapRequestId", "At", "By", "Action", "Note")
+SELECT "Id", "SubmittedAt", 'Dr. James Park', 'submitted', NULL
+FROM "ShiftSwapRequests" WHERE "Reason" LIKE 'Attending a conference%';
+
+INSERT INTO "SwapAuditEntries" ("ShiftSwapRequestId", "At", "By", "Action", "Note")
+SELECT "Id", "SubmittedAt" + INTERVAL '3 hours', 'Dr. Priya Nair', 'accepted', 'Sure, I am free that day'
+FROM "ShiftSwapRequests" WHERE "Reason" LIKE 'Attending a conference%';
+
+INSERT INTO "SwapAuditEntries" ("ShiftSwapRequestId", "At", "By", "Action", "Note")
+SELECT "Id", "SubmittedAt" + INTERVAL '10 hours', 'Admin User', 'approved', 'Approved, schedule updated'
+FROM "ShiftSwapRequests" WHERE "Reason" LIKE 'Attending a conference%';
+
+-- Rejected swap: Diane Foster ↔ Dr. Marcus Kim (requestee declined)
+INSERT INTO "ShiftSwapRequests"
+    ("RequesterId", "RequesteeId", "RequesterShiftId", "RequesteeShiftId", "Reason", "Status", "SubmittedAt")
+SELECT
+    (SELECT "Id" FROM "Staff" WHERE "Email"='d.foster@hospital.org'),
+    (SELECT "Id" FROM "Staff" WHERE "Email"='m.kim@hospital.org'),
+    (SELECT sh."Id" FROM "Shifts" sh
+     JOIN "Staff" s ON s."Id" = sh."StaffId"
+     WHERE s."Email" = 'd.foster@hospital.org' AND sh."ShiftType" = 'Morning'
+     ORDER BY sh."StartTime" LIMIT 1 OFFSET 1),
+    (SELECT sh."Id" FROM "Shifts" sh
+     JOIN "Staff" s ON s."Id" = sh."StaffId"
+     WHERE s."Email" = 'm.kim@hospital.org' AND sh."ShiftType" = 'Morning'
+     ORDER BY sh."StartTime" LIMIT 1 OFFSET 1),
+    'Need Tuesday off for a personal matter',
+    'Rejected',
+    NOW() - INTERVAL '4 days';
+
+INSERT INTO "SwapAuditEntries" ("ShiftSwapRequestId", "At", "By", "Action", "Note")
+SELECT "Id", "SubmittedAt", 'Diane Foster', 'submitted', NULL
+FROM "ShiftSwapRequests" WHERE "Reason" LIKE 'Need Tuesday%';
+
+INSERT INTO "SwapAuditEntries" ("ShiftSwapRequestId", "At", "By", "Action", "Note")
+SELECT "Id", "SubmittedAt" + INTERVAL '6 hours', 'Dr. Marcus Kim', 'rejected', 'Department meeting that morning, cannot swap'
+FROM "ShiftSwapRequests" WHERE "Reason" LIKE 'Need Tuesday%';
+
+-- Cancelled swap: Dr. Sarah Chen ↔ Dr. Marcus Kim
+INSERT INTO "ShiftSwapRequests"
+    ("RequesterId", "RequesteeId", "RequesterShiftId", "RequesteeShiftId", "Reason", "Status", "SubmittedAt")
+SELECT
+    (SELECT "Id" FROM "Staff" WHERE "Email"='s.chen@hospital.org'),
+    (SELECT "Id" FROM "Staff" WHERE "Email"='m.kim@hospital.org'),
+    (SELECT sh."Id" FROM "Shifts" sh
+     JOIN "Staff" s ON s."Id" = sh."StaffId"
+     WHERE s."Email" = 's.chen@hospital.org' AND sh."ShiftType" = 'Afternoon'
+     ORDER BY sh."StartTime" LIMIT 1),
+    (SELECT sh."Id" FROM "Shifts" sh
+     JOIN "Staff" s ON s."Id" = sh."StaffId"
+     WHERE s."Email" = 'm.kim@hospital.org' AND sh."ShiftType" = 'Afternoon'
+     ORDER BY sh."StartTime" LIMIT 1),
+    'Needed Wednesday afternoon for a family event',
+    'Cancelled',
+    NOW() - INTERVAL '3 days';
+
+INSERT INTO "SwapAuditEntries" ("ShiftSwapRequestId", "At", "By", "Action", "Note")
+SELECT "Id", "SubmittedAt", 'Dr. Sarah Chen', 'submitted', NULL
+FROM "ShiftSwapRequests" WHERE "Reason" LIKE 'Needed Wednesday%';
+
+INSERT INTO "SwapAuditEntries" ("ShiftSwapRequestId", "At", "By", "Action", "Note")
+SELECT "Id", "SubmittedAt" + INTERVAL '5 hours', 'Dr. Sarah Chen', 'cancelled', 'Plans changed, no longer needed'
+FROM "ShiftSwapRequests" WHERE "Reason" LIKE 'Needed Wednesday%';
+

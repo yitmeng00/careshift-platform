@@ -9,11 +9,26 @@ import {
   selectPendingCount,
   useGetLeaveRequestsQuery,
 } from "../../features/leaves/leavesApi";
+import {
+  selectSwapPendingCount,
+  useGetSwapRequestsQuery,
+} from "../../features/swaps/swapsApi";
 import type { StaffRole } from "../../types/auth";
 
 function LeavePendingBadge() {
   const { data: leaves = [] } = useGetLeaveRequestsQuery();
   const count = selectPendingCount(leaves);
+  if (count === 0) return null;
+  return (
+    <span className="min-w-5 h-5 px-1.5 rounded-full bg-accent text-white text-xs font-bold flex items-center justify-center">
+      {count}
+    </span>
+  );
+}
+
+function SwapPendingBadge() {
+  const { data: swaps = [] } = useGetSwapRequestsQuery();
+  const count = selectSwapPendingCount(swaps);
   if (count === 0) return null;
   return (
     <span className="min-w-5 h-5 px-1.5 rounded-full bg-accent text-white text-xs font-bold flex items-center justify-center">
@@ -80,6 +95,7 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
               <Icon size={20} className="shrink-0" />
               <span className="flex-1">{item.label}</span>
               {item.to === "/leaves" && <LeavePendingBadge />}
+              {item.to === "/swaps" && <SwapPendingBadge />}
             </NavLink>
           );
         })}

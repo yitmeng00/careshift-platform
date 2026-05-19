@@ -4,6 +4,7 @@ using ClinicalScheduler.Application.Shifts.Commands.CreateShift;
 using ClinicalScheduler.Application.Shifts.Commands.DeleteShift;
 using ClinicalScheduler.Application.Shifts.Commands.UpdateShift;
 using ClinicalScheduler.Application.Shifts.Queries.GetShiftsByWeek;
+using ClinicalScheduler.Application.Shifts.Queries.GetUpcomingShifts;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +28,10 @@ public class ShiftsController(IMediator mediator, IHubContext<ScheduleHub> hub) 
         var effectiveWeekStart = weekStart ?? DateOnly.FromDateTime(DateTime.UtcNow);
         return Ok(await mediator.Send(new GetShiftsByWeekQuery(effectiveWeekStart, departmentId, monthStart), ct));
     }
+
+    [HttpGet("upcoming")]
+    public async Task<IActionResult> GetUpcoming([FromQuery] int staffId, CancellationToken ct) =>
+        Ok(await mediator.Send(new GetUpcomingShiftsQuery(staffId), ct));
 
     [HttpPost]
     [Authorize(Roles = "Admin,DepartmentLead")]
