@@ -53,6 +53,11 @@ export const shiftsApi = api.injectEndpoints({
       query: (id) => ({ url: `/shifts/${id}`, method: "DELETE" }),
       invalidatesTags: ["Shift"],
     }),
+
+    getUpcomingShifts: builder.query<Shift[], number>({
+      query: (staffId) => ({ url: "/shifts/upcoming", params: { staffId } }),
+      providesTags: ["Shift"],
+    }),
   }),
 });
 
@@ -62,4 +67,5 @@ export const {
   useCreateShiftMutation,
   useUpdateShiftMutation,
   useDeleteShiftMutation,
+  useGetUpcomingShiftsQuery,
 } = shiftsApi;
